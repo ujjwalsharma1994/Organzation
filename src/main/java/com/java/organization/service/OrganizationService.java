@@ -88,4 +88,20 @@ public class OrganizationService {
 		} else
 			return ResponseEntity.status(400).body(new RestResponse(400, "Please provide organization id and request", null, null));
 	}
+
+	public ResponseEntity<RestResponse> deleteOrganizationById(int organizationId) {
+
+		if (organizationId > 0) {
+
+			boolean organizationFound = OrganizationRepository.deleteOrganizationById(organizationId);
+			if (organizationFound) {
+				return ResponseEntity.status(200).body(new RestResponse(200, null, "1 organization deleted successfully.", null));
+
+			} else {
+				return ResponseEntity.status(404).body(new RestResponse(404, "No organization for Id "+organizationId+" found.", null, null));
+			}
+		} else {
+			return ResponseEntity.status(400).body(new RestResponse(400, "Please provide organization id.", null, null));
+		}
+	}
 }

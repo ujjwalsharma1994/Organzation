@@ -42,4 +42,24 @@ public class OrganizationRepository {
 						.findFirst()
 						.orElse(null)), latestOrganizationObject);
 	}
+
+	public static boolean deleteOrganizationById(int organizationId) {
+
+		Organization organizationFound = organizations.stream()
+			.filter((organization) -> {
+				if (organization.getOragnizationId() == organizationId) {
+					return true;
+				} else {
+					return false;
+				}
+			})
+			.findFirst()
+			.orElse(null);
+
+		if (organizationFound != null) { //not null - delete
+			OrganizationRepository.organizations.remove(organizationFound);
+			return true;
+		} else // null -> not able to delete because object not found in the list.
+			return false;
+	}
 }
