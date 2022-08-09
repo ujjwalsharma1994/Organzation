@@ -1,7 +1,12 @@
 package com.java.organization.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "organization")
 public class Organization {
 
+	@Id
 	private int oragnizationId;
 	private String name;
 	private int totalEmployees;

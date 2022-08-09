@@ -1,7 +1,9 @@
 package com.java.organization.service;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +15,9 @@ import com.java.organization.repository.OrganizationRepository;
 @Component
 public class OrganizationService {
 
+	@Autowired
+	private OrganizationRepository organizationRepository;
+
 	public String createOrganization(OrganizationRequest organizationRequest) {
 
 		if (organizationRequest != null) {
@@ -23,7 +28,7 @@ public class OrganizationService {
 						organizationRequest.getName(), organizationRequest.getTotalEmployees(), organizationRequest.getLocation(),
 						organizationRequest.getZip());
 
-				OrganizationRepository.save(organization);
+				organizationRepository.save(organization); //database;
 				return "Organization created successfully";
 			} else 
 				return "Invalid Organization Id";
@@ -34,7 +39,7 @@ public class OrganizationService {
 
 	public ResponseEntity<RestResponse> findAllOrganizations() {
 
-		List<Organization> organizations = OrganizationRepository.fetchAll();
+		List<Organization> organizations = organizationRepository.findAll();
 		if (organizations.size() > 0)
 			return ResponseEntity.status(200).body(new RestResponse(200, null, organizations.size()+" organization(s) were fetched successfully.", organizations)) ;
 		else
@@ -45,9 +50,9 @@ public class OrganizationService {
 		
 		if (organizationId > 0) {
 
-			Organization organizationFound = OrganizationRepository.findOrganizationById(organizationId);
-			if (organizationFound != null)
-				return ResponseEntity.status(200).body(new RestResponse(200, null, "1 organization found.", organizationFound));
+			Optional<Organization> organizationFound = organizationRepository.findById(organizationId);
+			if (organizationFound.isPresent())
+				return ResponseEntity.status(200).body(new RestResponse(200, null, "1 organization found.", organizationFound.get()));
 			else
 				return ResponseEntity.status(404).body(new RestResponse(404, null, "No organization found.", null)) ;
 		} else {
@@ -59,28 +64,27 @@ public class OrganizationService {
 
 		if (organizationId > 0 && organizationRequest != null) {
 
-			Organization organization = OrganizationRepository.findOrganizationById(organizationId); //organization
-			Organization organizationOld = new Organization(organizationId, organization.getName(), organization.getTotalEmployees(), organization.getLocation(), organization.getZip());
-
-			if (organization != null) {
-
+			Optional<Organization> organization = organizationRepository.findById(organizationId); //organization
+			
+			if (organization.isPresent()) {
+	
 				if (organizationRequest.getName() != null) {
-					organization.setName(organizationRequest.getName());
+					organization.get().setName(organizationRequest.getName());
 				}
 
 				if (organizationRequest.getLocation() != null) {
-					organization.setLocation(organizationRequest.getLocation());
+					organization.get().setLocation(organizationRequest.getLocation());
 				}
 				
 				if (organizationRequest.getTotalEmployees() > 0) {
-					organization.setTotalEmployees(organizationRequest.getTotalEmployees());
+					organization.get().setTotalEmployees(organizationRequest.getTotalEmployees());
 				}
 
 				if (organizationRequest.getZip() > 0) {
-					organization.setZip(organizationRequest.getZip());
+					organization.get().setZip(organizationRequest.getZip());
 				}
 
-				OrganizationRepository.updateOrganizationObject(organizationOld, organization);
+				organizationRepository.save(organization.get());
 				return ResponseEntity.status(200).body(new RestResponse(200, null, "1 organization updated successfully.", organization));
 			} else {
 				return ResponseEntity.status(404).body(new RestResponse(404, "No organization for Id "+organizationId+" found.", null, null));
@@ -93,13 +97,9 @@ public class OrganizationService {
 
 		if (organizationId > 0) {
 
-			boolean organizationFound = OrganizationRepository.deleteOrganizationById(organizationId);
-			if (organizationFound) {
-				return ResponseEntity.status(200).body(new RestResponse(200, null, "1 organization deleted successfully.", null));
+			organizationRepository.deleteById(organizationId);
+			return ResponseEntity.status(200).body(new RestResponse(200, null, "1 organization deleted successfully.", null));
 
-			} else {
-				return ResponseEntity.status(404).body(new RestResponse(404, "No organization for Id "+organizationId+" found.", null, null));
-			}
 		} else {
 			return ResponseEntity.status(400).body(new RestResponse(400, "Please provide organization id.", null, null));
 		}
